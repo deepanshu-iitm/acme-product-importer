@@ -35,8 +35,32 @@ def create_product(payload: ProductCreate, db: Session = Depends(get_db)):
 
 # LIST
 @router.get("/", response_model=list[ProductResponse])
-def list_products(db: Session = Depends(get_db)):
-    return db.query(Product).all()
+def list_products(
+    sku: str = None,
+    name: str = None,
+    description: str = None,
+    active: bool = None,
+    limit: int = 20,
+    offset: int = 0,
+    db: Session = Depends(get_db)
+):
+    query = db.query(Product)
+
+    if sku:
+        query = query.filter(Product.sku_norm == normalize_sku(sku))
+
+    if name:
+        query = query.filter(Product.name.ilike(f"%{name}%"))
+
+    if description:
+        query = query.filter(Product.description.ilike(f"%{description}%"))
+
+    if active is not None:
+        query = query.filter(Product.active == active)
+
+    query = query.offset(offset).limit(limit)
+
+    return query.all()
 
 # GET SINGLE
 @router.get("/{product_id}", response_model=ProductResponse)
