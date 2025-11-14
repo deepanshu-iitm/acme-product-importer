@@ -5,6 +5,7 @@ from .db import get_db
 from .models import Product
 from .schemas import ProductCreate, ProductUpdate, ProductResponse
 from .utils import normalize_sku
+from fastapi import Query
 
 router = APIRouter(prefix="/products", tags=["products"])
 
@@ -62,6 +63,23 @@ def list_products(
 
     return query.all()
 
+# DELETE ALL
+@router.delete("/all")
+def delete_all_products(
+    confirm: bool = Query(False, description="Pass true to confirm deletion"),
+    db: Session = Depends(get_db)
+):
+    if not confirm:
+        raise HTTPException(
+            status_code=400,
+            detail="To delete all products, you must pass confirm=true"
+        )
+
+    deleted = db.query(Product).delete()
+    db.commit()
+
+    return {"message": f"Deleted {deleted} products successfully"}
+
 # GET SINGLE
 @router.get("/{product_id}", response_model=ProductResponse)
 def get_product(product_id: int, db: Session = Depends(get_db)):
@@ -96,3 +114,5 @@ def delete_product(product_id: int, db: Session = Depends(get_db)):
     db.commit()
 
     return {"message": "Deleted successfully"}
+
+
