@@ -136,7 +136,109 @@ def import_csv_to_db(file_path, batch_size=1000):
 @celery_app.task(bind=True)
 def import_csv_task(self, file_path, batch_size=1000):
     file_path = os.path.abspath(file_path)
-    return import_csv_to_db(file_path, batch_size=batch_size)
+
+    with open(file_path, "r", encoding="utf-8") as f:
+        total_rows = sum(1 for _ in f) - 1  # minus header
+
+    total_batches = max(1, (total_rows + batch_size - 1) // batch_size)
+    processed_batches = 0
+
+    # Send initial state
+    self.update_state(
+        state="STARTED",
+        meta={"status": "Starting import...", "batches": 0, "total_batches": total_batches}
+    )
+
+    created_total = 0
+    updated_total = 0
+
+    session = get_session()
+    try:
+        batch = []
+        with open(file_path, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+
+            for row in reader:
+                sku = (row.get("sku") or row.get("SKU") or "").strip()
+                name = row.get("name") or ""
+                description = row.get("description") or ""
+                price_raw = row.get("price") or ""
+
+                try:
+                    price = float(price_raw) if price_raw else None
+                except:
+                    price = None
+
+                sku_norm = normalize_sku(sku)
+                if not sku_norm:
+                    continue
+
+                batch.append({
+                    "sku": sku,
+                    "sku_norm": sku_norm,
+                    "name": name,
+                    "description": description,
+                    "price": price,
+                })
+
+                # If batch full -> process it
+                if len(batch) >= batch_size:
+                    c, u = write_batch(session, batch)
+                    created_total += c
+                    updated_total += u
+                    batch = []
+                    processed_batches += 1
+
+                    # PROGRESS UPDATE 
+                    self.update_state(
+                        state="PROGRESS",
+                        meta={
+                            "status": f"Processed batch {processed_batches}/{total_batches}",
+                            "batches": processed_batches,
+                            "total_batches": total_batches,
+                            "created": created_total,
+                            "updated": updated_total
+                        }
+                    )
+                    
+                    import time
+                    time.sleep(0.5)
+
+            # leftover
+            if batch:
+                c, u = write_batch(session, batch)
+                created_total += c
+                updated_total += u
+                processed_batches += 1
+                
+                self.update_state(
+                    state="PROGRESS",
+                    meta={
+                        "status": f"Processed batch {processed_batches}/{total_batches} (final)",
+                        "batches": processed_batches,
+                        "total_batches": total_batches,
+                        "created": created_total,
+                        "updated": updated_total
+                    }
+                )
+
+        return {
+            "status": "completed",
+            "created": created_total,
+            "updated": updated_total,
+            "total_batches": total_batches
+        }
+
+    except Exception as e:
+        self.update_state(
+            state="FAILURE",
+            meta={"error": str(e)}
+        )
+        raise e
+
+    finally:
+        session.close()
+
 
 
 @celery_app.task
@@ -152,5 +254,5 @@ def process_csv(file_path):
         reader = csv.reader(f)
         for row in reader:
             row_count += 1
-            time.sleep(0.001)
+            time.sleep(0.5) 
     return {"rows": row_count}

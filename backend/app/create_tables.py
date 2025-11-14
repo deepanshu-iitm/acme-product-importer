@@ -1,5 +1,5 @@
 from db import engine
-from models import Base
+from models import Base, Product, Webhook
 
 if __name__ == "__main__":
     print("Creating tables...")

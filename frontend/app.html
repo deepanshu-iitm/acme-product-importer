@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>ACME Product Importer</title>
+    <style>
+        :root {
+            --bg: #f3f4f6;
+            --card-bg: #ffffff;
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --danger: #dc2626;
+            --success: #16a34a;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --radius: 10px;
+            --shadow-soft: 0 10px 25px rgba(15, 23, 42, 0.06);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: radial-gradient(circle at top left, #e0f2fe, #f9fafb);
+            color: var(--text-main);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px 16px 48px;
+        }
+
+        .header-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px 24px;
+            box-shadow: var(--shadow-soft);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header-left h1 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .header-left p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .chip {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: #e0f2fe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .nav {
+            display: inline-flex;
+            border-radius: 999px;
+            background: #eef2ff;
+            padding: 4px;
+            gap: 4px;
+        }
+
+        .nav button {
+            border: none;
+            padding: 8px 16px;
+            font-size: 13px;
+            border-radius: 999px;
+            background: transparent;
+            color: #4b5563;
+            cursor: pointer;
+            transition: 0.15s ease;
+        }
+
+        .nav button.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+        }
+
+        .nav button:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.6);
+        }
+
+        .section {
+            display: none;
+            margin-top: 18px;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 18px 20px;
+            box-shadow: var(--shadow-soft);
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .card-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .card-header span {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .btn {
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: none;
+            font-size: 13px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-danger {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .btn-danger:hover {
+            background: #fecaca;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-muted);
+        }
+
+        .btn-ghost:hover {
+            background: #f3f4f6;
+            color: var(--text-main);
+        }
+
+        .btn-success {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .btn-success:hover {
+            background: #bbf7d0;
+        }
+
+        .form-inline {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .form-inline input[type="file"] {
+            font-size: 13px;
+        }
+
+        .progress-container {
+            margin-top: 16px;
+            display: none;
+        }
+
+        .progress-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            background-color: #e5e7eb;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            width: 0%;
+            height: 8px;
+            background: linear-gradient(90deg, #22c55e, #16a34a);
+            transition: width 0.25s ease;
+        }
+
+        #progress-text {
+            margin-top: 6px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 10px;
+            margin-top: 6px;
+        }
+
+        .filters input,
+        .filters select {
+            padding: 7px 10px;
+            font-size: 13px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: #f9fafb;
+            outline: none;
+        }
+
+        .filters input:focus,
+        .filters select:focus {
+            border-color: var(--primary);
+            background: white;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+            font-size: 13px;
+        }
+
+        th, td {
+            padding: 10px 8px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--text-muted);
+            background: #f9fafb;
+        }
+
+        tr:hover td {
+            background: #f3f4f6;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+        }
+
+        .badge-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-muted {
+            background: #e5e7eb;
+            color: #4b5563;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 6px;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+
+        .pagination button {
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            padding: 4px 10px;
+            background: white;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        .pagination .page-label {
+            color: var(--text-muted);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background-color: rgba(15, 23, 42, 0.5);
+            z-index: 50;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 14px;
+            padding: 18px 20px;
+            min-width: 360px;
+            max-width: 480px;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .modal-header h3 {
+            font-size: 16px;
+        }
+
+        .close {
+            cursor: pointer;
+            font-size: 20px;
+            color: var(--text-muted);
+        }
+
+        .close:hover {
+            color: var(--text-main);
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            margin-bottom: 4px;
+            color: var(--text-muted);
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 7px 9px;
+            font-size: 13px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: #f9fafb;
+            outline: none;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            border-color: var(--primary);
+            background: white;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .alert {
+            padding: 8px 10px;
+            margin-bottom: 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .alert-success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .alert-danger {
+            background: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+        }
+
+        @media (max-width: 768px) {
+            .header-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .form-inline {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .modal-content {
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <div class="header-card">
+            <div class="header-left">
+                <h1>ACME Product Importer</h1>
+                <p>Import, manage, and sync products at scale.</p>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+                <span class="chip">Backend: FastAPI · Celery · PostgreSQL</span>
+                <div class="nav">
+                    <button class="active" onclick="showSection('upload', this)">Upload CSV</button>
+                    <button onclick="showSection('products', this)">Manage Products</button>
+                    <button onclick="showSection('webhooks', this)">Webhooks</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- UPLOAD SECTION -->
+        <div id="upload" class="section active">
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h2>Upload CSV</h2>
+                        <span>Upload up to 500k products. Import runs in the background.</span>
+                    </div>
+                    <button class="btn btn-danger" onclick="bulkDelete()">Delete all products</button>
+                </div>
+
+                <div class="form-inline">
+                    <input type="file" id="csvFile" accept=".csv">
+                    <button class="btn btn-primary" onclick="uploadFile()">Start import</button>
+                </div>
+
+                <div id="progress-container" class="progress-container">
+                    <div class="progress-label">Import progress</div>
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill"></div>
+                    </div>
+                    <p id="progress-text">Waiting to start…</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRODUCTS SECTION -->
+        <div id="products" class="section">
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h2>Products</h2>
+                        <span>Search, edit, and keep your catalog clean.</span>
+                    </div>
+                    <button class="btn btn-primary" onclick="showProductModal()">+ Add product</button>
+                </div>
+
+                <div class="filters">
+                    <input type="text" id="filterSku" placeholder="Filter by SKU" onkeyup="filterProducts()">
+                    <input type="text" id="filterName" placeholder="Filter by name" onkeyup="filterProducts()">
+                    <select id="filterActive" onchange="filterProducts()">
+                        <option value="">All status</option>
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                    <button class="btn btn-ghost" onclick="loadProducts()">Refresh</button>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>SKU</th>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Price</th>
+                            <th>Status</th>
+                            <th style="text-align:right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productsTable"></tbody>
+                </table>
+
+                <div class="pagination" id="pagination"></div>
+            </div>
+        </div>
+
+        <!-- WEBHOOKS SECTION -->
+        <div id="webhooks" class="section">
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h2>Webhooks</h2>
+                        <span>Configure outbound webhooks for product events.</span>
+                    </div>
+                    <button class="btn btn-primary" onclick="showWebhookModal()">+ Add webhook</button>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>URL</th>
+                            <th>Events</th>
+                            <th>Status</th>
+                            <th style="text-align:right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="webhooksTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRODUCT MODAL -->
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="productModalTitle">Add product</h3>
+                <span class="close" onclick="closeModal('productModal')">&times;</span>
+            </div>
+            <form id="productForm">
+                <div class="form-group">
+                    <label>SKU</label>
+                    <input type="text" id="productSku" required>
+                </div>
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="productName" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="productDescription" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Price</label>
+                    <input type="number" step="0.01" id="productPrice">
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="productActive">
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-ghost" onclick="closeModal('productModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- WEBHOOK MODAL -->
+    <div id="webhookModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="webhookModalTitle">Add webhook</h3>
+                <span class="close" onclick="closeModal('webhookModal')">&times;</span>
+            </div>
+            <form id="webhookForm">
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="webhookName" required>
+                </div>
+                <div class="form-group">
+                    <label>URL</label>
+                    <input type="url" id="webhookUrl" required>
+                </div>
+                <div class="form-group">
+                    <label>Event types</label>
+                    <input type="text" id="webhookEvents" placeholder="product.created,product.import.completed" required>
+                </div>
+                <div class="form-group">
+                    <label>Secret (optional)</label>
+                    <input type="text" id="webhookSecret">
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="webhookEnabled">
+                        <option value="true">Enabled</option>
+                        <option value="false">Disabled</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-ghost" onclick="closeModal('webhookModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save webhook</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "http://localhost:8001";
+
+        let currentPage = 1;
+        const pageSize = 20;
+        let lastPage = false;
+        let currentEditId = null;
+        let currentWebhookId = null;
+
+        function showSection(sectionId, btn) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+
+            document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+
+            if (sectionId === "products") loadProducts();
+            if (sectionId === "webhooks") loadWebhooks();
+        }
+
+        function uploadFile() {
+            const fileInput = document.getElementById("csvFile");
+            if (!fileInput.files.length) {
+                alert("Please select a CSV file first.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+
+            document.getElementById("progress-container").style.display = "block";
+            updateProgress(0, "Starting upload…");
+
+            fetch(`${API_BASE}/upload/`, {
+                method: "POST",
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.task_id) {
+                    pollProgress(data.task_id);
+                } else {
+                    showAlert("Upload failed", "danger");
+                }
+            })
+            .catch(err => showAlert("Upload error: " + err.message, "danger"));
+        }
+
+        function pollProgress(taskId) {
+            const interval = setInterval(() => {
+                fetch(`${API_BASE}/tasks/${taskId}`)
+                .then(res => res.json())
+                .then(data => {
+                    const info = data.info || {};
+                    const state = data.state;
+
+                    let created = info.created || 0;
+                    let updated = info.updated || 0;
+                    let batches = info.batches || 0;
+                    let total = info.total_batches || 1;
+
+                    if (state === "PROGRESS") {
+                        const percent = Math.round((batches / total) * 100);
+                        updateProgress(percent, `Batch ${batches}/${total} — Created: ${created}, Updated: ${updated}`);
+                    }
+
+                    if (state === "SUCCESS") {
+                        updateProgress(100, `Completed! Created: ${info.created}, Updated: ${info.updated}`);
+                        clearInterval(interval);
+                        showAlert(`Import completed! Created: ${info.created}, Updated: ${info.updated}`, "success");
+                    }
+
+                    if (state === "FAILURE") {
+                        updateProgress(0, `Error: ${info.error || 'Unknown error'}`);
+                        clearInterval(interval);
+                        showAlert("Import failed: " + (info.error || 'Unknown error'), "danger");
+                    }
+                })
+                .catch(err => console.error("Polling error:", err));
+            }, 500);
+        }
+
+        function updateProgress(percent, text) {
+            const fill = document.getElementById("progress-fill");
+            fill.style.width = percent + "%";
+            document.getElementById("progress-text").innerText = text;
+        }
+
+        function bulkDelete() {
+            if (!confirm("Delete ALL products? This cannot be undone.")) return;
+
+            fetch(`${API_BASE}/products/all?confirm=true`, {
+                method: "DELETE"
+            })
+            .then(res => res.json())
+            .then(data => {
+                showAlert(data.message || "All products deleted", "success");
+                loadProducts();
+            })
+            .catch(err => showAlert("Delete failed: " + err.message, "danger"));
+        }
+
+        function loadProducts() {
+            const sku = document.getElementById('filterSku').value;
+            const name = document.getElementById('filterName').value;
+            const active = document.getElementById('filterActive').value;
+
+            const offset = (currentPage - 1) * pageSize;
+
+            let url = `${API_BASE}/products/?limit=${pageSize}&offset=${offset}`;
+            if (sku) url += `&sku=${encodeURIComponent(sku)}`;
+            if (name) url += `&name=${encodeURIComponent(name)}`;
+            if (active) url += `&active=${active}`;
+
+            fetch(url)
+            .then(res => res.json())
+            .then(products => {
+                const tbody = document.getElementById('productsTable');
+                tbody.innerHTML = '';
+
+                products.forEach(product => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${product.sku}</td>
+                        <td>${product.name}</td>
+                        <td>${product.description || ''}</td>
+                        <td>${product.price != null ? '₹' + product.price : '—'}</td>
+                        <td>
+                            <span class="badge ${product.active ? 'badge-success' : 'badge-muted'}">
+                                ${product.active ? 'Active' : 'Inactive'}
+                            </span>
+                        </td>
+                        <td style="text-align:right;">
+                            <button class="btn btn-ghost" onclick="editProduct(${product.id})">Edit</button>
+                            <button class="btn btn-danger" onclick="deleteProduct(${product.id})">Delete</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                lastPage = products.length < pageSize;
+                renderPagination();
+            });
+        }
+
+        function renderPagination() {
+            const container = document.getElementById('pagination');
+            container.innerHTML = '';
+
+            const prevBtn = document.createElement('button');
+            prevBtn.textContent = 'Previous';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = () => {
+                currentPage--;
+                loadProducts();
+            };
+
+            const nextBtn = document.createElement('button');
+            nextBtn.textContent = 'Next';
+            nextBtn.disabled = lastPage;
+            nextBtn.onclick = () => {
+                currentPage++;
+                loadProducts();
+            };
+
+            const label = document.createElement('span');
+            label.className = 'page-label';
+            label.textContent = `Page ${currentPage}`;
+
+            container.appendChild(prevBtn);
+            container.appendChild(label);
+            container.appendChild(nextBtn);
+        }
+
+        function filterProducts() {
+            currentPage = 1;
+            loadProducts();
+        }
+
+        function showProductModal(id = null) {
+            currentEditId = id;
+            document.getElementById('productModalTitle').textContent = id ? 'Edit product' : 'Add product';
+
+            if (id) {
+                fetch(`${API_BASE}/products/${id}`)
+                .then(res => res.json())
+                .then(product => {
+                    document.getElementById('productSku').value = product.sku;
+                    document.getElementById('productName').value = product.name;
+                    document.getElementById('productDescription').value = product.description || '';
+                    document.getElementById('productPrice').value = product.price || '';
+                    document.getElementById('productActive').value = product.active.toString();
+                });
+            } else {
+                document.getElementById('productForm').reset();
+                document.getElementById('productActive').value = 'true';
+            }
+
+            document.getElementById('productModal').style.display = 'flex';
+        }
+
+        function editProduct(id) {
+            showProductModal(id);
+        }
+
+        function deleteProduct(id) {
+            if (!confirm("Delete this product?")) return;
+
+            fetch(`${API_BASE}/products/${id}`, { method: 'DELETE' })
+            .then(res => res.json())
+            .then(data => {
+                showAlert(data.message || 'Product deleted', 'success');
+                loadProducts();
+            });
+        }
+
+        function loadWebhooks() {
+            fetch(`${API_BASE}/webhooks/`)
+            .then(res => res.json())
+            .then(webhooks => {
+                const tbody = document.getElementById('webhooksTable');
+                tbody.innerHTML = '';
+
+                webhooks.forEach(webhook => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${webhook.name}</td>
+                        <td>${webhook.url}</td>
+                        <td>${webhook.event_types}</td>
+                        <td>
+                            <span class="badge ${webhook.enabled ? 'badge-success' : 'badge-muted'}">
+                                ${webhook.enabled ? 'Enabled' : 'Disabled'}
+                            </span>
+                        </td>
+                        <td style="text-align:right;">
+                            <button class="btn btn-ghost" onclick="editWebhook(${webhook.id})">Edit</button>
+                            <button class="btn btn-success" onclick="testWebhook(${webhook.id})">Test</button>
+                            <button class="btn btn-danger" onclick="deleteWebhook(${webhook.id})">Delete</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            });
+        }
+
+        function showWebhookModal(id = null) {
+            currentWebhookId = id;
+            document.getElementById('webhookModalTitle').textContent = id ? 'Edit webhook' : 'Add webhook';
+
+            if (id) {
+                fetch(`${API_BASE}/webhooks/${id}`)
+                .then(res => res.json())
+                .then(webhook => {
+                    document.getElementById('webhookName').value = webhook.name;
+                    document.getElementById('webhookUrl').value = webhook.url;
+                    document.getElementById('webhookEvents').value = webhook.event_types;
+                    document.getElementById('webhookSecret').value = webhook.secret || '';
+                    document.getElementById('webhookEnabled').value = webhook.enabled.toString();
+                });
+            } else {
+                document.getElementById('webhookForm').reset();
+                document.getElementById('webhookEnabled').value = 'true';
+            }
+
+            document.getElementById('webhookModal').style.display = 'flex';
+        }
+
+        function editWebhook(id) {
+            showWebhookModal(id);
+        }
+
+        function testWebhook(id) {
+            fetch(`${API_BASE}/webhooks/${id}/test`, { method: 'POST' })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    showAlert(`Webhook test OK · ${result.status_code} · ${result.response_time_ms}ms`, 'success');
+                } else {
+                    showAlert(`Webhook test failed: ${result.error}`, 'danger');
+                }
+            });
+        }
+
+        function deleteWebhook(id) {
+            if (!confirm("Delete this webhook?")) return;
+
+            fetch(`${API_BASE}/webhooks/${id}`, { method: 'DELETE' })
+            .then(res => res.json())
+            .then(data => {
+                showAlert(data.message || 'Webhook deleted', 'success');
+                loadWebhooks();
+            });
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        function showAlert(message, type) {
+            const container = document.querySelector('.container');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.innerText = message;
+            container.insertBefore(alert, container.children[1]);
+            setTimeout(() => alert.remove(), 4000);
+        }
+
+        document.getElementById('productForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const data = {
+                sku: document.getElementById('productSku').value,
+                name: document.getElementById('productName').value,
+                description: document.getElementById('productDescription').value,
+                price: parseFloat(document.getElementById('productPrice').value) || null,
+                active: document.getElementById('productActive').value === 'true'
+            };
+
+            const url = currentEditId ? `${API_BASE}/products/${currentEditId}` : `${API_BASE}/products/upsert`;
+            const method = currentEditId ? 'PUT' : 'POST';
+
+            fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(() => {
+                showAlert(currentEditId ? 'Product updated' : 'Product created', 'success');
+                closeModal('productModal');
+                loadProducts();
+            })
+            .catch(err => showAlert('Error saving product: ' + err.message, 'danger'));
+        });
+
+        document.getElementById('webhookForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const data = {
+                name: document.getElementById('webhookName').value,
+                url: document.getElementById('webhookUrl').value,
+                event_types: document.getElementById('webhookEvents').value,
+                secret: document.getElementById('webhookSecret').value || null,
+                enabled: document.getElementById('webhookEnabled').value === 'true'
+            };
+
+            const url = currentWebhookId ? `${API_BASE}/webhooks/${currentWebhookId}` : `${API_BASE}/webhooks/`;
+            const method = currentWebhookId ? 'PUT' : 'POST';
+
+            fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(() => {
+                showAlert(currentWebhookId ? 'Webhook updated' : 'Webhook created', 'success');
+                closeModal('webhookModal');
+                loadWebhooks();
+            })
+            .catch(err => showAlert('Error saving webhook: ' + err.message, 'danger'));
+        });
+
+        window.onclick = function (e) {
+            if (e.target.classList.contains('modal')) {
+                e.target.style.display = 'none';
+            }
+        };
+
+        // Initial load
+        loadProducts();
+    </script>
+</body>
+</html>
