@@ -1,10 +1,12 @@
 from fastapi import FastAPI
 from .routes_products import router as product_router
+from .routes_upload import router as upload_router
 from .tasks import add_numbers
 
 app = FastAPI()
 
 app.include_router(product_router)
+app.include_router(upload_router)
 
 @app.get("/health")
 async def health_check():
