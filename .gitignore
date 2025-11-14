@@ -4,12 +4,9 @@ __pycache__/
 *.pyd
 env/
 venv/
-.env
-.env.local
 *.sqlite3
 
 # IDEs
-.vscode/
 .idea/
 
 # OS
@@ -26,3 +23,5 @@ build/
 # Docker
 docker-compose.override.yml
 EOF
+config.bat
+node_modules
