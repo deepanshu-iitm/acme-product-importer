@@ -1,8 +1,11 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
 import os
 import uuid
+#from .tasks import process_csv
+from backend.app.tasks import import_csv_task
 
 router = APIRouter(prefix="/upload", tags=["upload"])
+
 
 UPLOAD_DIR = "uploads"
 
@@ -20,8 +23,12 @@ def upload_csv(file: UploadFile = File(...)):
     with open(saved_path, "wb") as f:
         f.write(file.file.read())
 
+    # task = process_csv.delay(saved_path)
+    task = import_csv_task.delay(saved_path, batch_size=1000)
+
     return {
         "message": "File uploaded successfully",
         "file_id": file_id,
-        "path": saved_path
+        "path": saved_path,
+        "task_id": task.id
     }

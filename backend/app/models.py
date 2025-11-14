@@ -6,10 +6,12 @@ Base = declarative_base()
 class Product(Base):
     __tablename__ = "products"
 
-    id = Column(Integer, primary_key=True, index=True)
+    __table_args__ = {'implicit_returning': True}
+
+    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
 
     sku = Column(String, nullable=False)
-    sku_norm = Column(String, nullable=False, unique=True, index=True)  # lower(sku)
+    sku_norm = Column(String, nullable=False, unique=True, index=True)  
 
     name = Column(String, nullable=False)
     description = Column(String)
@@ -19,3 +21,7 @@ class Product(Base):
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    __mapper_args__ = {
+        "confirm_deleted_rows": False
+    }
